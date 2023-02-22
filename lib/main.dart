@@ -111,57 +111,56 @@ class _MyAppState extends State<MyApp> {
   //     print('Error loading positions from file: $e');
   //   }
   // }
-  void _takeScreenShot() async {
-    RenderRepaintBoundary? boundary =
-        _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary?.debugNeedsPaint == false) {
-      var image = await boundary?.toImage(pixelRatio: 6.0);
-      ByteData? byteData = await image?.toByteData(format: ImageByteFormat.png);
-      var pngBytes = byteData?.buffer.asUint8List();
-      final directory = await getApplicationDocumentsDirectory();
-      final path = directory.path;
-      File imgFile = File('$path/map_screenshot.png');
-      if (pngBytes != null) {
-        await imgFile.writeAsBytes(pngBytes, flush: true);
-        print('saved');
-      }
-    }
-  }
+  // void _takeScreenShot() async {
+  //   RenderRepaintBoundary? boundary =
+  //       _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+  //   if (boundary?.debugNeedsPaint == false) {
+  //     var image = await boundary?.toImage();
+  //     ByteData? byteData = await image?.toByteData(format: ImageByteFormat.png);
+  //     var pngBytes = byteData?.buffer.asUint8List();
+  //     final directory = await getApplicationDocumentsDirectory();
+  //     final path = directory.path;
+  //     File imgFile = File('$path/map_screenshot.png');
+  //     if (pngBytes != null) {
+  //       await imgFile.writeAsBytes(pngBytes, flush: true);
+  //     }
+  //   }
+  // }
 
   // Future<File> get _localFile async {
   //   final directory = await getApplicationDocumentsDirectory();
   //   return File('${directory.path}/positions.json');
   // }
 
-  // void _takeScreenShot() async {
-  //   RenderRepaintBoundary boundary =
-  //       _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary;
-  //   if (boundary.debugNeedsPaint == false) {
-  //     var image = await boundary.toImage(pixelRatio: 3.0);
-  //     ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
-  //     var pngBytes = byteData?.buffer.asUint8List();
-  //
-  //     // Request permission to access the pictures directory
-  //     bool permissionGranted = await _requestPermission();
-  //     if (!permissionGranted) {
-  //       // Handle permission not granted
-  //       return;
-  //     }
-  //
-  //     // Get the pictures directory
-  //     final directory = await getExternalStorageDirectory();
-  //     final path = '${directory!.path}/Pictures';
-  //     Directory(path).createSync(recursive: true);
-  //
-  //     File imgFile = File('$path/map_screenshot.png');
-  //     if (pngBytes != null) {
-  //       await imgFile.writeAsBytes(pngBytes, flush: true);
-  //       print('saved');
-  //     } else {
-  //       print('sorry');
-  //     }
-  //   }
-  // }
+  void _takeScreenShot() async {
+    RenderRepaintBoundary boundary =
+        _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary;
+    if (boundary.debugNeedsPaint == false) {
+      var image = await boundary.toImage(pixelRatio: 12);
+      ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+      var pngBytes = byteData?.buffer.asUint8List();
+
+      // Request permission to access the pictures directory
+      bool permissionGranted = await _requestPermission();
+      if (!permissionGranted) {
+        // Handle permission not granted
+        return;
+      }
+
+      // Get the pictures directory
+      final directory = await getExternalStorageDirectory();
+      final path = '${directory!.path}/Pictures';
+      Directory(path).createSync(recursive: true);
+
+      File imgFile = File('$path/map_screenshot.png');
+      if (pngBytes != null) {
+        await imgFile.writeAsBytes(pngBytes, flush: true);
+        print('saved');
+      } else {
+        print('sorry');
+      }
+    }
+  }
 
 // Request permission to access the pictures directory
   Future<bool> _requestPermission() async {
