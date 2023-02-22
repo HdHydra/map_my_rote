@@ -189,10 +189,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Location Demo',
+      title: 'Map My Route',
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.pink[900],
           title: Text('Map my Route'),
         ),
         body: RepaintBoundary(
