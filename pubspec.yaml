@@ -39,8 +39,7 @@ dependencies:
   permission_handler:
   flutter_map: ^3.1.0
   latlong2:
-  flutter_cache_manager:
-  shared_preferences: ^2.0.17
+  path_provider:
 
 dev_dependencies:
   flutter_test:

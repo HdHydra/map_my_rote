@@ -12,16 +12,19 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter_map/plugin_api.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  GlobalKey _globalKey = new GlobalKey();
+  final GlobalKey _globalKey = GlobalKey();
   Position? _currentPosition;
+  var saved = 0;
   List<LatLng> points = [LatLng(0, 0)];
 
   @override
@@ -34,6 +37,7 @@ class _MyAppState extends State<MyApp> {
       points.clear();
       // _loadPositionsFromFile();
     });
+    _requestPermission();
     _checkLocationPermission();
   }
 
@@ -55,8 +59,8 @@ class _MyAppState extends State<MyApp> {
       //     });
       //   });
       // } catch (e) {
-      await Geolocator.getPositionStream(
-        locationSettings: LocationSettings(
+      Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
           distanceFilter: 1,
         ),
@@ -65,7 +69,7 @@ class _MyAppState extends State<MyApp> {
           _currentPosition = position;
           points.add(
               LatLng(_currentPosition!.latitude, _currentPosition!.longitude));
-          print('high mode');
+          //print('high mode');
         });
       });
       // }
@@ -132,33 +136,44 @@ class _MyAppState extends State<MyApp> {
   //   return File('${directory.path}/positions.json');
   // }
 
-  void _takeScreenShot() async {
+  String generateUniqueName() {
+    final now = DateTime.now();
+    final name = '${now.day}_${now.hour}${now.minute}$saved';
+    return name;
+  }
+
+  Future _takeScreenShot() async {
     RenderRepaintBoundary boundary =
         _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary;
-    if (boundary.debugNeedsPaint == false) {
-      var image = await boundary.toImage(pixelRatio: 12);
-      ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
-      var pngBytes = byteData?.buffer.asUint8List();
+    // if (boundary.debugNeedsPaint == false) {
+    var image = await boundary.toImage(pixelRatio: 6);
+    ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+    var pngBytes = byteData?.buffer.asUint8List();
 
-      // Request permission to access the pictures directory
-      bool permissionGranted = await _requestPermission();
-      if (!permissionGranted) {
-        // Handle permission not granted
-        return;
-      }
+    // Request permission to access the pictures directory
+    bool permissionGranted = await _requestPermission();
+    if (!permissionGranted) {
+      // Handle permission not granted
+      return;
+    }
 
-      // Get the pictures directory
-      final directory = await getExternalStorageDirectory();
-      final path = '${directory!.path}/Pictures';
-      Directory(path).createSync(recursive: true);
+    // Get the pictures directory
+    String name = generateUniqueName();
+    final directory = await getExternalStorageDirectory();
+    final path = '${directory!.path}/Pictures';
+    Directory(path).createSync(recursive: true);
 
-      File imgFile = File('$path/map_screenshot.png');
-      if (pngBytes != null) {
-        await imgFile.writeAsBytes(pngBytes, flush: true);
-        print('saved');
-      } else {
-        print('sorry');
-      }
+    File imgFile = File('$path/map_$name.png');
+    if (pngBytes != null) {
+      await imgFile.writeAsBytes(pngBytes, flush: true);
+      //print('saved');
+      setState(() {
+        saved = saved + 1;
+        Future.delayed(const Duration(milliseconds: 500));
+      });
+      // } else {
+      //   print('sorry');
+      // }
     }
   }
 
@@ -195,6 +210,16 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           backgroundColor: Colors.pink[900],
           title: Text('Map my Route'),
+          actions: [
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: Text('Saved Images = $saved'),
+                ),
+              ],
+            )
+          ],
         ),
         body: RepaintBoundary(
           key: _globalKey,
@@ -221,40 +246,56 @@ class _MyAppState extends State<MyApp> {
                       userAgentPackageName: 'com.example.route_map',
                       retinaMode: MediaQuery.of(context).devicePixelRatio > 1.0,
                     ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: points.toList(),
-                          color: Colors.green,
-                          strokeWidth: 2.0,
-                        ),
-                      ],
-                    ),
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          // width: 80.0,
-                          // height: 80.0,
-                          anchorPos: AnchorPos.align(AnchorAlign.top),
-                          point: LatLng(
-                            _currentPosition!.latitude,
-                            _currentPosition!.longitude,
+                    RepaintBoundary(
+                      child: PolylineLayer(
+                        polylines: [
+                          Polyline(
+                            points: points.toList(),
+                            color: Colors.green,
+                            strokeWidth: 2.0,
                           ),
-                          builder: (ctx) => Container(
-                            child: Icon(
-                              Icons.location_pin,
-                              color: Colors.red,
+                        ],
+                      ),
+                    ),
+                    RepaintBoundary(
+                      child: MarkerLayer(
+                        markers: [
+                          Marker(
+                            // width: 80.0,
+                            // height: 80.0,
+                            anchorPos: AnchorPos.align(AnchorAlign.top),
+                            point: LatLng(
+                              _currentPosition!.latitude,
+                              _currentPosition!.longitude,
+                            ),
+                            builder: (ctx) => Container(
+                              child: const Icon(
+                                Icons.location_pin,
+                                color: Colors.red,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 100,
+                      right: 30,
+                      child: FloatingActionButton(
+                        onPressed: () async {
+                          points.clear();
+                        },
+                        child: const Icon(Icons.refresh_rounded),
+                      ),
                     ),
                     Positioned(
                       bottom: 30,
                       right: 30,
                       child: FloatingActionButton(
-                        onPressed: _takeScreenShot,
-                        child: Icon(Icons.camera_alt),
+                        onPressed: () async {
+                          await _takeScreenShot();
+                        },
+                        child: const Icon(Icons.camera_alt),
                       ),
                     )
                   ],
